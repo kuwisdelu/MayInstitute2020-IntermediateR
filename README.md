@@ -16,7 +16,7 @@ install.packages(required_packages_CRAN)
 BiocManager::install(required_packages_BioC)
 ```
 
-Test whether all required packages:
+Test whether all required packages are installed:
 
 ```
 required_packages <- c(required_packages_CRAN, required_packages_BioC)
