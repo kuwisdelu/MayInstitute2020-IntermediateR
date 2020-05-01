@@ -1,0 +1,497 @@
+---
+title: "Object-Oriented Programming in R"
+author: "Kylie Ariel Bemis"
+date: "4 May 2020"
+output: beamer_presentation
+fontsize: 10pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(methods)
+```
+
+## References for Object-Oriented Programming in R
+
+_Advanced R_ by Hadley Wickam
+
+    - Book freely available at http://adv-r.had.co.nz
+
+_R Language Definition_ by the R Core Team
+
+    - https://cran.r-project.org/doc/manuals/R-lang.html
+    
+## What is a data frame?
+
+```{r}
+head(cars)
+```
+
+## What is a data frame?
+
+```{r}
+typeof(cars)
+attributes(cars)
+```
+
+## A data frame is a list?
+
+If a data frame is a list, then why does it print differently than a list?
+
+Consider the following code:
+
+```{r eval=FALSE}
+plot(cars)
+plot(cars$speed, cars$dist)
+plot(dist ~ speed, data=cars)
+```
+
+What does each do?
+
+## A data frame is a class
+
+A data frame is an S3 **class** that builds on top of the basic `list` data type.
+
+There are specialized `print()` and `plot()` methods (among many others!) that change behavior depending on what **class** of object they receive.
+
+## Introduction to Object-Oriented Programming in R
+
+\small
+Object-oriented programming (OOP) is a way of organizing code around commonly re-used data "classes" and "methods".
+
+A **class** is a blueprint for a way of organizing data.
+
+- E.g., a `data.frame` is a class for heterogenous, tabular data
+
+An **object** is a particular instance of a class.
+
+- E.g., `iris` and `mtcars` are particular instances of `data.frame`s.
+
+Using **inheritance** allows subclasses to specialize superclasses.
+
+- E.g., a `tibble` inherits most of its behavior from `data.frame`.
+
+A **method** is a function associated with behavior specialized to a particular class. In R this is done using **generic functions**.
+
+- E.g., `plot` is a generic function. It works differently depending on what kind of object is being plotted.
+\normalsize
+
+## A simple example
+
+Consider a "pet simulator" game. It may consist of the following elements:
+
+- An `Animal` class with child classes `Cat` and `Dog`.
+
+- A generic function called `speak`.
+
+- A `speak` method for both the `Cat` and `Dog` classes
+
+- An object named `Mittens` as an instance of the `Cat` class
+
+- An object named `Duke` as an instance of the `Dog` class
+
+- `speak(Mittens)`
+
+    - "Meow!"
+
+- `speak(Duke)`
+
+    - "Woof!"
+
+## OOP in R versus other languages
+
+In most object-oriented programming languages like C++ and Java, *methods belong to classes*. This relationship can be seen in the way they call their methods are called via `object.method()`:
+
+- E.g., `Mittens.speak()`
+
+- E.g., `Duke.speak()`
+
+R takes a functional programming approach to OOP, so that *methods belong to generic functions*. This relationship can be seen in how methods in R are called via `method(object)`.
+
+- E.g., `speak(Mittens)`
+
+- E.g., `speak(Duke)`
+
+This may seem confusing at first if you are familiar with OOP from a langauge like C++ or Java, but it's just a different way of thinking about OOP.
+
+## Object Systems in R
+
+There are two major object-oriented programming systems in R:
+
+- S3 classes:
+    - Very simple class system
+    - No formal class definitions
+    - Single dispatch (methods only specialized on first argument)
+
+- S4 classes:
+    - More complex class system
+    - Formal class definitions
+    - Multiple dispatch (methods specialized on multiple arguments)
+
+When to use which?
+
+- Use S3 for simple data structures without complex dependencies
+
+- Use S4 for more complex data structures
+
+S3 is more common in base R and CRAN packages.
+
+S4 is more common in Bioconductor packages.
+
+## Exceptions: RC
+
+There is a third OOP system in R called Reference Classes, which we won't talk about in this class, because they break fundamental assumptions about data in R. They are useful, however, for classes which care about mutable state, such as GUIs.
+
+## The S3 OO System
+
+The S3 class system is based on adding `attribute`s to any of R's base types.
+
+That means S3 classes are based on:
+
+- `integer`
+- `numeric`
+- `character`
+- `list`
+
+...etc.
+
+S3 classes are defined by their `class` attribute which can be accessed and set by the `class()` function.
+
+What are some S3 classes you already know?
+
+## Existing S3 classes: `factor`
+
+```{r}
+fc <- factor(c("a", "a", "b", "c"))
+typeof(fc) # base type
+class(fc) # class
+attributes(fc)
+```
+
+## Existing S3 classes: `data.frame`
+
+\small
+```{r}
+df <- data.frame(x=1:3, y=4:6)
+typeof(df) # base type
+class(df) # class
+attributes(df)
+```
+\normalsize
+
+## Existing S3 classes: `tibble`
+
+\small
+```{r}
+library(tibble)
+tb <- tibble(x=1:3, y=4:6)
+typeof(tb) # base type
+class(tb) # class -- tbl_df "inherits" from data.frame!
+attributes(tb)
+```
+\normalsize
+
+## Existing S3 classes: `lm`
+
+\small
+```{r}
+fit <- lm(Sepal.Width ~ Sepal.Length, data=iris)
+typeof(fit) # base type
+class(fit) # class
+attributes(fit)
+```
+\normalsize
+
+## S3 Generic Functions
+
+S3 generic functions are defined by a call to `UseMethod()`.
+
+Consider the following generic functions for extracting the fitted response values and residuals from a model.
+
+```{r}
+fitted
+residuals
+```
+
+## S3 Methods
+
+Use `methods()` to see the methods defined for various classes.
+
+\small
+```{r}
+methods(fitted)
+methods(residuals)
+```
+\normalsize
+
+## S3 Methods (cont'd)
+
+S3 methods are defined by the naming convention `generic.class()`.
+
+S3 method dispatch actually relies this naming scheme, and there are no additional requirements for defining an S3 method for a particular class.
+
+For `residuals`, we saw a `residuals.lm` method, but there was no `fitted.lm` method.
+
+If there is no specific method for a class, the default method is called, as defined by a function called `generic.default()`.
+
+## S3 Methods (cont'd)
+
+We can use `getS3method` to find a particular S3 method.
+
+```{r}
+getS3method("fitted", "default")
+```
+
+## S3 Methods (cont'd)
+
+We can also view all the methods defined for a specific class using the `methods()` function.
+
+```{r}
+methods(class="lm")
+```
+
+## Defining an S3 class
+
+We can define an S3 class either by using `structure()`, or by simply setting the `class` attribute of an existing object.
+
+```{r}
+a <- structure(list(), class="Animal")
+class(a)
+```
+
+```{r}
+a <- list()
+class(a) <- "Animal"
+class(a)
+```
+
+## Create a constructor for an S3 class
+
+\small
+Typically, we should provide a constructor for our class to make it easier to create an object of that class. Note we use S3 inheritance in this example.
+
+```{r}
+Cat <- function(name) structure(list(name=name),
+                                class=c("Cat", "Animal"))
+Dog <- function(name) structure(list(name=name),
+                                class=c("Dog", "Animal"))
+Cat("Mittens")
+Dog("Duke")
+```
+\normalsize
+
+## Define a custom `print` method
+
+We can create a custom print method for our classes by defining a `print` method. This is the generic function that gets called whenever we type the name of a variable and hit "Enter".
+
+To do this, we simply define a function following the naming convention `generic.class()`. We'd like all animals to use the same `print` method, so we'll define it on `Animal`.
+
+```{r}
+print.Animal <- function(object) {
+  print(paste("A", class(object)[1] ,
+              "named", object$name))
+}
+Cat("Mittens")
+Dog("Duke")
+```
+
+## Defining an S3 generic function
+
+We now create a generic function for `speak` by creating a function that calls `UseMethod` with the name of our generic function.
+
+```{r}
+speak <- function(object) UseMethod("speak")
+```
+
+## Defining S3 methods
+
+We now create a `speak` methods for our classes by following the naming convention `generic.class()`.
+
+```{r}
+speak.default <- function(object) print("*weird noises*")
+speak.Animal <- function(object) print("*weird animal noises*")
+speak.Cat <- function(object) print("Meow!")
+speak.Dog <- function(object) print("Woof!")
+```
+
+## S3 example
+
+Let's create two pets:
+
+```{r}
+Mittens <- Cat("Mittens")
+Duke <- Dog("Duke")
+```
+
+What will each of the following print out?
+
+```{r eval=FALSE}
+speak(Mittens)
+speak(Duke)
+speak(list())
+```
+
+---
+
+```{r}
+speak(Mittens)
+speak(Duke)
+speak(list())
+```
+
+## The S4 OO System
+
+The S4 class system works similarly to S3 from a user perspective, but adds mmore formality and rigor.
+
+The S4 class system adds:
+
+- Formal definitions of the data structure
+
+    - S4 classes have `slots` (accessed via `@`) defined to be a specific data type
+    
+    - Inheritance is formally defined rather than via an attribute
+
+- Method dispatch on multiple arguments, not only the first one
+
+- Validity of the object can be rigorously checked
+
+What are some S4 classes you already know?
+
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+library(SummarizedExperiment)
+library(MSnbase)
+```
+
+## Existing S4 classes: `SummarizedExperiment`s
+
+```{r}
+getClass("SummarizedExperiment")
+```
+
+## Existing S4 classes: `MSnSet`s
+
+```{r}
+getClass("MSnSet")
+```
+
+## Existing S4 classes: `DelayedArray`s
+
+```{r}
+getClass("DelayedArray")
+```
+
+## Existing S4 classes: `DataFrame`s
+
+```{r}
+getClass("DataFrame")
+```
+
+## Creating an S4 class
+
+S4 classes are defined via a call to `setClass`.
+
+```{r}
+setClass("Animal4",
+         contains = "VIRTUAL",
+         slots = c(name = "character"),
+         validity = function(object) {
+           if ( length(object@name) != 1 )
+             stop("slot 'name' must be length 1")
+         })
+setClass("Cat4", contains = "Animal4")
+setClass("Dog4", contains = "Animal4")
+```
+
+We do not expect to actually create `Animal` objects, so we make it a `VIRTUAL` object. (Virtual classes cannot be instantiated.)
+
+## Create a constructor for an S4 class
+
+\small
+Using `setClass` doesn't actually create or modify an existing object, so we should create constructors for our classes.
+
+New instances of S4 classes are created using `new()`, but it is rude to ask the user to call `new()` directly.
+
+```{r}
+Cat4 <- function(name) new("Cat4", name=name)
+Dog4 <- function(name) new("Dog4", name=name)
+Mittens4 <- Cat4("Mittens")
+Duke4 <- Dog4("Duke")
+Mittens4
+Duke4
+```
+\normalsize
+
+## Define a custom `show` method
+
+S4 classes use the `show` generic function instead of the `print` generic function. S4 methods are defined using `setMethod`.
+
+```{r}
+setMethod("show", "Animal4", function(object) {
+  print(paste("A", class(object)[1] ,
+              "named", object@name))
+})
+Cat4("Mittens")
+Dog4("Duke")
+```
+
+## Defining an S4 generic function
+
+Just like S3 generic functions are defined by a call to `UseMethod()`, S4 generic functions are defined using `setGeneric()` with a call to `standardGeneric()`.
+
+```{r}
+setGeneric("speak", function(object) standardGeneric("speak"))
+```
+
+## Defining S4 methods
+
+S4 methods are defined using `setMethod()`, which takes the class signature for the method, and the function to call.
+
+```{r}
+setMethod("speak", "Cat4", function(object) print("Meow!"))
+setMethod("speak", "Dog4", function(object) print("Woof!"))
+```
+
+## Viewing existing S4 methods
+
+We can view existing S4 methods with `showMethods()`.
+
+```{r}
+showMethods("speak")
+```
+
+What is the method for class "ANY"?
+
+## Viewing existing S4 methods (cont'd)
+
+We can view a specific method using `selectMethod()`.
+
+```{r}
+selectMethod("speak", "ANY")
+```
+
+It's our S3 generic function!
+
+## S4 example
+
+```{r}
+Mittens4 <- Cat4("Mittens")
+Duke4 <- Dog4("Duke")
+```
+
+```{r}
+speak(Mittens4)
+speak(Duke4)
+```
+
+## Proteomics example: MassSpectrum S4 class and methods
+
+The **"MassSpectrum-class.R"** and **"MassSpectrum-methods.R"** files include a basic implementation of an S4 class for working with raw mass spectra in R.
+
+Take a moment to explore the provided implementation and understand how it works.
+
+A more complete example of these classes are available in the `MSExample` package available at [https://github.com/kuwisdelu/MSExample](https://github.com/kuwisdelu/MSExample). We will use this package tomorrow, so you can install it by doing:
+
+```{r eval=FALSE}
+remotes::install_github("kuwisdelu/MSExample")
+```
+

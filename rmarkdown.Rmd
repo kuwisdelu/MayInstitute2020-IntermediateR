@@ -1,0 +1,87 @@
+---
+title: "R Markdown Example"
+author: "Kylie Ariel Bemis"
+date: "4 May 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Text formatting 
+------------------------------------------------------------
+
+*italic*  or _italic_
+**bold**   __bold__
+`code`
+superscript^2^ and subscript~2~
+
+Headings
+------------------------------------------------------------
+
+# 1st Level Header
+
+## 2nd Level Header
+
+### 3rd Level Header
+
+Lists
+------------------------------------------------------------
+
+*   Bulleted list item 1
+
+*   Item 2
+
+    * Item 2a
+
+    * Item 2b
+
+1.  Numbered list item 1
+
+1.  Item 2. The numbers are incremented automatically in the output.
+
+Links and images
+------------------------------------------------------------
+
+<http://rmarkdown.rstudio.com>
+
+[Link text](http://rmarkdown.rstudio.com)
+
+![Include an image named Rlogo.png in the same directory](fig/Rlogo.png)
+
+Tables 
+------------------------------------------------------------
+
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+
+Code
+------------------------------------------------------------
+
+```{r}
+1 + 1
+```
+
+
+Plots
+------------------------------------------------------------
+
+```{r}
+x <- seq(from=0, to=2*pi, length.out=100)
+sinx <- sin(x)
+plot(sinx ~ x)
+```
+
+```{r car-plot, eval=FALSE}
+library(ggplot2)
+ggplot(cars) + geom_point(aes(x=speed, y=dist))
+```
+
+---
+
+```{r car-plot, echo=FALSE}
+```
+

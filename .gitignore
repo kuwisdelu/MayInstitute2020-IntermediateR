@@ -1,0 +1,6 @@
+.DS_Store
+*.pdf
+*.Rhistory
+*.Rdata
+*.h5
+*.out
